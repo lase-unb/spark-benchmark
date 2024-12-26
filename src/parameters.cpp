@@ -1,6 +1,6 @@
 #include "parameters.h"
 
-namespace parameters {
+namespace spark {
 
 void Parameters::fixed_parameters() {
     tg = 300.0; // neutral temperature (K)
@@ -91,4 +91,4 @@ Parameters Parameters::case_4() {
     p.computed_parameters();
     return p;
 }
-}  // namespace parameters
+}  // namespace spark

@@ -1,0 +1,42 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/**", 
+                "C:/Users/roberto.rocha/scoop/apps/gcc/current/include",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/current/include/c++/13.2.0",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/current/include/c++/13.2.0/x86_64-w64-mingw32",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/current/x86_64-w64-mingw32/include",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/current/lib/gcc/x86_64-w64-mingw32/13.2.0/include",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/include/c++/13.2.0/x86_64-w64-mingw32",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/include/",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/bin",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/lib/gcc/x86_64-w64-mingw32/13.2.0/include",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed",
+                "C:/Users/roberto.rocha/scoop/apps/gcc/13.2.0/include/c++/13.2.0/bits",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/current/bin",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/current/include",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/current/lib",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/current/",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/14.2.0-rt_v12-rev0/bin",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/14.2.0-rt_v12-rev0/include",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/14.2.0-rt_v12-rev0/lib",
+                "C:/Users/roberto.rocha/scoop/apps/mingw/14.2.0-rt_v12-rev0/",
+                "${workspaceFolder}/external"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\gcc.exe",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

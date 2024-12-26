@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-namespace parameters {
+namespace spark {
 
 struct Parameters {
     size_t nx;
@@ -38,5 +38,5 @@ private:
     void computed_parameters();
 };
 
-}  // namespace parameters
+}  // namespace spark
 #endif  // PARAMETERS_H
