@@ -31,5 +31,9 @@
 *.out
 *.app
 
-# Ignore VSCode directory
+# IDE
 .vscode/
+.vs
+build
+cmake-build
+lib
