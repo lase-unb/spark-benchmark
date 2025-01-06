@@ -21,6 +21,9 @@ add_subdirectory(spark)
 
 # Source files
 add_executable(spark-benchmark
+        src/main.cpp
+        src/simulation.cpp
+        src/simulation.h
         src/parameters.cpp
         src/parameters.h
         src/reactions.cpp
