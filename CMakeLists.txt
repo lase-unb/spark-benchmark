@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
-
 project(spark-benchmark)
 
 set(CMAKE_CXX_STANDARD 20)
-set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add CPM
 set(CPM_DOWNLOAD_VERSION 0.40.2)
 set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
@@ -19,16 +17,33 @@ CPMAddPackage("gh:d99kris/rapidcsv@8.83")
 CPMAddPackage("gh:p-ranav/argparse@3.1")
 add_subdirectory(spark)
 
-# Source files
-add_executable(spark-benchmark
-        src/main.cpp
-        src/simulation.cpp
-        src/simulation.h
-        src/parameters.cpp
-        src/parameters.h
-        src/reactions.cpp
+include(FetchContent)
+
+FetchContent_Declare(
+  hypre
+  GIT_REPOSITORY https://github.com/hypre-space/hypre.git
+  GIT_TAG v2.28.0  
+)
+FetchContent_MakeAvailable(hypre)
+
+set(SOURCES
+    src/main.cpp
+    src/simulation.cpp
+    src/parameters.cpp
+    src/reactions.cpp
 )
 
-target_link_libraries(spark-benchmark PUBLIC spark::spark rapidcsv argparse)
-target_include_directories(spark-benchmark PRIVATE ${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/external)
+add_executable(spark-benchmark ${SOURCES})
+
+target_include_directories(spark-benchmark PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/spark/include
+    ${argparse_SOURCE_DIR}/include
+    ${rapidcsv_SOURCE_DIR}/src
+)
+
+target_link_libraries(spark-benchmark PRIVATE
+    spark
+    HYPRE
+    argparse
+)
