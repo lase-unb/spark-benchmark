@@ -4,8 +4,7 @@
 
 #include "spark/random/random.h"
 #include "simulation.h"
-// TODO: Implement "simulation events.h"
-// #include "simulation_events.h"
+#include "simulation_events.h"
 
 spark::Parameters get_case_parameters(int case_number) {
     spark::Parameters p;

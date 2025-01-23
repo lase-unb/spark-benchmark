@@ -13,6 +13,9 @@
 #include <spark/spatial/grid.h>
 #include "reactions.h"
 
+#include <fstream>
+#include <filesystem>
+
 namespace {
     auto maxwellian_emitter(double t, double lx, double ly, double m) {
         return [t, lx, ly, m](spark::core::Vec<3>& v, spark::core::Vec<2>& x) {
@@ -31,6 +34,7 @@ namespace spark {
 
     void Simulation::run() {
         set_initial_conditions();
+        spatial::TUniformGrid<core::TVec<double, 2>, 2> electric_field({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});
 
         auto electron_collisions = load_electron_collisions();
         auto ion_collisions = load_ion_collisions();
@@ -73,13 +77,13 @@ namespace spark {
             spark::interpolate::weight_to_grid(electrons_, electron_density_);
             spark::interpolate::weight_to_grid(ions_, ion_density_);
 
-            spark::em::charge_density(parameters_.particle_weight, ion_density_,
+            spark::em::charge_density<2>(parameters_.particle_weight, ion_density_,
                                       electron_density_, rho_field_);
 
 
             poisson_solver.solve(phi_field_.data(), rho_field_.data());
 
-            spark::em::electric_field<2>(phi_field_, electric_field_);
+            spark::em::electric_field<2>(phi_field_, electric_field_.data());
 
             spark::interpolate::field_at_particles(electric_field_, electrons_, electron_field);
             spark::interpolate::field_at_particles(electric_field_, ions_, ion_field);
@@ -95,14 +99,13 @@ namespace spark {
             ion_collisions.react_all();
 
             events().notify(Event::Step, state_);
-        }
+    } 
+            events().notify(Event::End, state_);
+}
 
-        events().notify(Event::End, state_);
-    }
-
-    Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
-        return events_;
-    }
+Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
+    return events_;
+}
 
     void Simulation::set_initial_conditions() {
         electrons_ = spark::particle::ChargedSpecies<2, 3>(-spark::constants::e, spark::constants::m_e);
@@ -124,7 +127,6 @@ namespace spark {
                                                     {parameters_.nx, parameters_.ny});
         electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
         ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
-        electric_field_ = spark::core::TMatrix<spark::core::TVec<double, 2>, 2>(spark::core::ULongVec<2>{parameters_.nx, parameters_.ny});
     }
 
     spark::collisions::MCCReactionSet<2, 3> Simulation::load_electron_collisions() {

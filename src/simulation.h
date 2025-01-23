@@ -32,6 +32,8 @@ namespace spark {
             Simulation& sim_;
         };
 
+        void save_results(const std::string& output_path) const;
+
         friend StateInterface;
 
         explicit Simulation(const Parameters& parameters, const std::string& data_path);
@@ -52,7 +54,7 @@ namespace spark {
         Parameters parameters_;
         std::string data_path_;
         StateInterface state_;
-
+        
         size_t step = 0;
         spark::particle::ChargedSpecies<2, 3> ions_;
         spark::particle::ChargedSpecies<2, 3> electrons_;
@@ -66,15 +68,16 @@ namespace spark {
         Events<Event, EventAction> events_;
             
         std::vector<spark::em::StructPoissonSolver2D::Region> region() const;
-
+        spark::spatial::TUniformGrid<spark::core::Vec<2>, 2> convert_electric_field() const;
+        spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> electron_field;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> ion_field;
-        spark::core::TMatrix<spark::core::TVec<double, 2>, 2> electric_field_;
+        // spark::core::TMatrix<spark::core::TVec<double, 2>, 2> electric_field_;
 
         void set_initial_conditions();
         spark::collisions::MCCReactionSet<2, 3> load_electron_collisions();
         spark::collisions::MCCReactionSet<2, 3> load_ion_collisions();
     };
-} // namespace ccp
+} // namespace spark
 
 #endif // SIMULATION_H
