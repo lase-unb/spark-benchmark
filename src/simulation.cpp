@@ -11,6 +11,7 @@
 #include <spark/particle/pusher.h>
 #include <spark/random/random.h>
 #include <spark/spatial/grid.h>
+
 #include "reactions.h"
 
 #include <fstream>
@@ -69,8 +70,9 @@ namespace spark {
                           []()
                           { return 0.0; }});
 
-        em::StructPoissonSolver2D poisson_solver(domain_prop, region);
+        // em::StructPoissonSolver2D poisson_solver(domain_prop, region);
 
+        auto poisson_solver = em::StructPoissonSolver2D(domain_prop, region);
         events().notify(Event::Start, state_);
 
         for (step = 0; step < parameters_.n_steps; ++step) {
@@ -84,13 +86,11 @@ namespace spark {
             poisson_solver.solve(phi_field_.data(), rho_field_.data());
 
             spark::em::electric_field<2>(phi_field_, electric_field_.data());
-
             spark::interpolate::field_at_particles(electric_field_, electrons_, electron_field);
             spark::interpolate::field_at_particles(electric_field_, ions_, ion_field);
 
             spark::particle::move_particles(electrons_, electron_field, parameters_.dt);
             spark::particle::move_particles(ions_, ion_field, parameters_.dt);
-
             // TODO: implement absorbing boundary conditions
             // spark::particle::apply_absorbing_boundary(electrons_, {0, 0}, {parameters_.lx, parameters_.ly});
             // spark::particle::apply_absorbing_boundary(ions_, {0, 0}, {parameters_.lx, parameters_.ly});
@@ -125,6 +125,7 @@ Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
                                                     {parameters_.nx, parameters_.ny});
         phi_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
                                                     {parameters_.nx, parameters_.ny});
+        // electric_field_ = spatial::TUniformGrid<core::TVec<double, 2>, 2>({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});                                            
         electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
         ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
     }

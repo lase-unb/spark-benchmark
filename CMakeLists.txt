@@ -32,6 +32,7 @@ set(SOURCES
     src/simulation.cpp
     src/parameters.cpp
     src/reactions.cpp
+    src/simulation_events.cpp
 )
 
 add_executable(spark-benchmark ${SOURCES})

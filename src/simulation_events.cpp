@@ -3,6 +3,7 @@
 #include <chrono>
 #include <fstream>
 #include <span>
+#include <algorithm>
 
 namespace {
 template <class It>
@@ -43,7 +44,7 @@ void setup_events(Simulation& simulation) {
     simulation.events().add_action<PrintStartAction>(Simulation::Event::Start);
 
     struct PrintEvolutionAction : public Simulation::EventAction {
-        typedef std::chrono::high_resolution_clock clk;
+        typedef std::chrono::steady_clock clk;
         typedef std::chrono::duration<double, std::milli> ms;
         std::chrono::time_point<std::chrono::steady_clock> t_last;
         size_t initial_step = 0;
@@ -69,7 +70,7 @@ void setup_events(Simulation& simulation) {
 
                 const float progress =
                     static_cast<float>(step) /
-                    static_cast<float>(std::max(1ul, s.parameters().n_steps - 1));
+                    static_cast<float>(std::max(1ull, s.parameters().n_steps - 1));
 
                 const double dur_per_particle =
                     dur / (static_cast<double>(s.electrons().n() + s.ions().n()));
@@ -92,8 +93,8 @@ void setup_events(Simulation& simulation) {
         Parameters parameters_;
 
         explicit AverageFieldAction(const Parameters& parameters) : parameters_(parameters) {
-            av_electron_density = spark::spatial::AverageGrid({{parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny}});
-            av_ion_density = spark::spatial::AverageGrid({{parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny}});
+            av_electron_density = spark::spatial::AverageGrid<2>({{parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny}});
+            av_ion_density = spark::spatial::AverageGrid<2>({{parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny}});
         }
 
         void notify(const Simulation::StateInterface& s) override {

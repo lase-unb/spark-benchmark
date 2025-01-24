@@ -6,6 +6,7 @@
 #include <spark/spatial/grid.h>
 #include <spark/em/poisson.h>
 #include <spark/core/matrix.h>
+
 #include <string>
 #include <vector>
 
@@ -31,8 +32,6 @@ namespace spark {
         private:
             Simulation& sim_;
         };
-
-        void save_results(const std::string& output_path) const;
 
         friend StateInterface;
 
