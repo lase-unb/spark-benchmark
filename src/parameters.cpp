@@ -24,15 +24,15 @@ Parameters Parameters::case_1() {
     Parameters p{};
     p.fixed_parameters();
 
-    p.nx = 129; // number of horizontal cells
-    p.ny = 67; // number of vertical cells
+    p.nx = 50; // number of horizontal cells
+    p.ny = 50; // number of vertical cells
     p.dt = 1.0 / (400.0 * p.f); // time step (s)
     p.ng = 9.64e20; // neutral density (m^-3)
     p.n0 = 2.56e14; // plasma density (m^-3)
     p.volt = 450.0; // voltage (V)
-    p.ppc = 512; // particles per cell (dimensionless)
-    p.n_steps = 512'000; // steps to execute (dimensionless)
-    p.n_steps_avg = 12'800; // steps to average (dimensionless)
+    p.ppc = 100; // particles per cell (dimensionless)
+    p.n_steps = 1'000; // steps to execute (dimensionless)
+    p.n_steps_avg = 50; // steps to average (dimensionless)
 
     p.computed_parameters();
     return p;

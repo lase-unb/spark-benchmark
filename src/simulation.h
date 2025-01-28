@@ -6,6 +6,7 @@
 #include <spark/spatial/grid.h>
 #include <spark/em/poisson.h>
 #include <spark/core/matrix.h>
+#include <spark/particle/boundary.h>
 
 #include <string>
 #include <vector>
@@ -71,7 +72,7 @@ namespace spark {
         spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> electron_field;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> ion_field;
-        // spark::core::TMatrix<spark::core::TVec<double, 2>, 2> electric_field_;
+        spark::particle::TiledBoundary2D tiled_boundary_;
 
         void set_initial_conditions();
         spark::collisions::MCCReactionSet<2, 3> load_electron_collisions();

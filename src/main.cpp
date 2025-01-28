@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
     printf("Data path set to %s\n", data_path.c_str());
 
     spark::Simulation sim(get_case_parameters(case_number), data_path);
+    spark::setup_events(sim);
     sim.run();
 
     return 0;

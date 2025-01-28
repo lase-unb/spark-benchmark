@@ -6,9 +6,9 @@
 #include <algorithm>
 
 namespace {
-template <class It>
-void save_vec(const char* filename, const It& vec, size_t nx, size_t ny) {
+void save_vec(const char* filename, const std::vector<double>& vec, size_t nx, size_t ny) {
     std::ofstream out_file(filename);
+    out_file << std::scientific << std::setprecision(6);
 
     for (size_t i = 0; i < nx; ++i) {
         for (size_t j = 0; j < ny; ++j) {
@@ -24,9 +24,10 @@ void save_vec(const char* filename, const It& vec, size_t nx, size_t ny) {
 std::vector<double> count_to_density(double particle_weight,
                                      double dx,
                                      double dy,
-                                     const std::vector<double>& count) {
-    auto d = std::vector<double>(count.size());
-    std::ranges::transform(count, d.begin(), [particle_weight, dx, dy](const double val) {
+                                     const spark::core::TMatrix<double, 2>& count) {
+    auto d = std::vector<double>(count.size().mul());
+    std::ranges::transform(count.data().begin(), count.data().end(), d.begin(),
+                           [particle_weight, dx, dy](const double val) {
         return val * particle_weight / (dx * dy);
     });
     return d;
@@ -116,21 +117,20 @@ void setup_events(Simulation& simulation) {
                                 const Parameters& parameters)
             : avg_field_action_(avg_field_action), parameters_(parameters) {}
 
-        void notify(const Simulation::StateInterface& s) override {
-            if (!avg_field_action_.expired()) {
-                const auto avg_field_action_ptr = avg_field_action_.lock();
-                const auto& avg_e = avg_field_action_ptr->av_electron_density.get();
-                const auto& avg_i = avg_field_action_ptr->av_ion_density.get();
+    void notify(const Simulation::StateInterface& s) override {
+        if (!avg_field_action_.expired()) {
+            const auto avg_field_action_ptr = avg_field_action_.lock();
+            const auto& avg_e = avg_field_action_ptr->av_electron_density.get();
+            const auto& avg_i = avg_field_action_ptr->av_ion_density.get();
 
-                save_vec("density_e.txt",
-                         count_to_density(parameters_.particle_weight, parameters_.dx, parameters_.dy, avg_e),
-                         parameters_.nx, parameters_.ny);
-                save_vec("density_i.txt",
-                         count_to_density(parameters_.particle_weight, parameters_.dx, parameters_.dy, avg_i),
-                         parameters_.nx, parameters_.ny);
-            }
+            auto density_e = count_to_density(parameters_.particle_weight, parameters_.dx, parameters_.dy, avg_e);
+            auto density_i = count_to_density(parameters_.particle_weight, parameters_.dx, parameters_.dy, avg_i);
+
+            save_vec("density_e.txt", density_e, parameters_.nx, parameters_.ny);
+            save_vec("density_i.txt", density_i, parameters_.nx, parameters_.ny);
         }
-    };
+    }
+};
 
     simulation.events().add_action(
         Simulation::Event::End, SaveDataAction(avg_field_action, simulation.state().parameters()));
