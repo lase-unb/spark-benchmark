@@ -17,7 +17,6 @@ include(${CPM_DOWNLOAD_LOCATION})
 CPMAddPackage("gh:d99kris/rapidcsv@8.83")
 CPMAddPackage("gh:p-ranav/argparse@3.1")
 add_subdirectory(spark)
-target_link_libraries(spark PRIVATE parallel-hashmap)
 include(FetchContent)
 
 FetchContent_Declare(

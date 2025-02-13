@@ -18,6 +18,8 @@ namespace spark {
 
     class Simulation {
     public:
+        spark::spatial::UniformGrid<2> phi_field_;
+        spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
         class StateInterface {
         public:
             StateInterface(Simulation& sim) : sim_(sim) {}
@@ -25,11 +27,10 @@ namespace spark {
             const spark::spatial::UniformGrid<2>& ion_density() const { return sim_.ion_density_; }
             const spark::particle::ChargedSpecies<2, 3>& ions() const { return sim_.ions_; }
             const spark::particle::ChargedSpecies<2, 3>& electrons() const { return sim_.electrons_; }
-
             const Parameters& parameters() const { return sim_.parameters_; }
-
             size_t step() const { return sim_.step; }
-
+            const spark::spatial::UniformGrid<2>& phi_field() const { return sim_.phi_field_; }
+            const spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2>& electric_field() const { return sim_.electric_field_; }
         private:
             Simulation& sim_;
         };
@@ -50,6 +51,9 @@ namespace spark {
         Events<Event, EventAction>& events();
         StateInterface& state() { return state_; };
 
+        const spark::spatial::UniformGrid<2>& get_phi_field() const { return phi_field_; }
+        const spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2>& get_electric_field() const { return electric_field_; }
+
     private:
         Parameters parameters_;
         std::string data_path_;
@@ -63,13 +67,13 @@ namespace spark {
         spark::spatial::UniformGrid<2> ion_density_;
 
         spark::spatial::UniformGrid<2> rho_field_;
-        spark::spatial::UniformGrid<2> phi_field_;
+        //spark::spatial::UniformGrid<2> phi_field_;
 
         Events<Event, EventAction> events_;
             
         std::vector<spark::em::StructPoissonSolver2D::Region> region() const;
         spark::spatial::TUniformGrid<spark::core::Vec<2>, 2> convert_electric_field() const;
-        spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
+        //spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> electron_field;
         spark::core::TMatrix<spark::core::TVec<double, 2>, 1> ion_field;
         spark::particle::TiledBoundary2D tiled_boundary_;

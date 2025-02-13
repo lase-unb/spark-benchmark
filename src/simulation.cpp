@@ -35,7 +35,6 @@ namespace spark {
 
     void Simulation::run() {
         set_initial_conditions();    
-        spatial::TUniformGrid<core::TVec<double, 2>, 2> electric_field_({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});
         
         auto electron_collisions = load_electron_collisions();
         auto ion_collisions = load_ion_collisions();
@@ -128,6 +127,7 @@ Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
 
         electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
         ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
+        electric_field_ = spark::spatial::TUniformGrid<core::TVec<double, 2>, 2>({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});
         
         std::vector<spark::particle::TiledBoundary> boundaries = {
         {{0, 0}, {static_cast<int>(parameters_.nx - 1), 0}, spark::particle::BoundaryType::Absorbing},
