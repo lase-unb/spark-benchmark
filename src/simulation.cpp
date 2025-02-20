@@ -45,25 +45,25 @@ namespace spark {
 
         std::vector<em::StructPoissonSolver2D::Region> region;
 
-        region.push_back({em::CellType::BoundaryDirichlet,
+        region.push_back({em::CellType::BoundaryNeumann,
                           {0, 0},
                           {static_cast<int>(parameters_.nx - 1), 0},
                           []()
                           { return 0.0; }});
 
-        region.push_back({em::CellType::BoundaryDirichlet,
+        region.push_back({em::CellType::BoundaryNeumann,
                           {0, static_cast<int>(parameters_.ny - 1)},
                           {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)},
                           []()
                           { return 0.0; }});
 
-        region.push_back({em::CellType::BoundaryNeumann,
+        region.push_back({em::CellType::BoundaryDirichlet,
                           {0, 0},
                           {0, static_cast<int>(parameters_.ny - 1)},
                           []()
                           { return 0.0; }});
 
-        region.push_back({em::CellType::BoundaryNeumann,
+        region.push_back({em::CellType::BoundaryDirichlet,
                           {static_cast<int>(parameters_.nx - 1), 0},
                           {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)},
                           []()
@@ -130,8 +130,8 @@ Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
         electric_field_ = spark::spatial::TUniformGrid<core::TVec<double, 2>, 2>({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});
         
         std::vector<spark::particle::TiledBoundary> boundaries = {
-        {{0, 0}, {static_cast<int>(parameters_.nx - 1), 0}, spark::particle::BoundaryType::Absorbing},
-        {{0, static_cast<int>(parameters_.ny - 1)}, {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Absorbing},
+        {{0, 0}, {static_cast<int>(parameters_.nx - 1), 0}, spark::particle::BoundaryType::Specular},
+        {{0, static_cast<int>(parameters_.ny - 1)}, {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Specular},
         {{0, 0}, {0, static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Absorbing},
         {{static_cast<int>(parameters_.nx - 1), 0}, {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Absorbing}
     };
