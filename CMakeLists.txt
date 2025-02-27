@@ -35,6 +35,7 @@ set(SOURCES
 )
 
 add_executable(spark-benchmark ${SOURCES})
+set_property(TARGET spark-benchmark PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 target_include_directories(spark-benchmark PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
