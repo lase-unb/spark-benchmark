@@ -30,84 +30,91 @@ namespace {
 } // namespace
 
 namespace spark {
-    Simulation::Simulation(const Parameters& parameters, const std::string& data_path)
-        : parameters_(parameters), data_path_(data_path), state_(StateInterface(*this)) {}
 
-    void Simulation::run() {
-        set_initial_conditions();    
+Simulation::Simulation(const Parameters& parameters, const std::string& data_path)
+    : parameters_(parameters), data_path_(data_path), state_(StateInterface(*this)) {}
+
+void Simulation::run() {
+    set_initial_conditions();    
+    
+    auto electron_collisions = load_electron_collisions();
+    auto ion_collisions = load_ion_collisions();
+
+    em::StructPoissonSolver2D::DomainProp domain_prop;
+    domain_prop.extents = {static_cast<int>(parameters_.nx), static_cast<int>(parameters_.ny)};
+    domain_prop.dx = {parameters_.dx, parameters_.dy};
+
+    events().notify(Event::Start, state_);
+
+    for (step = 0; step < parameters_.n_steps; ++step) {
+        const double boundary_voltage = parameters_.volt * 
+        std::sin(2.0 * spark::constants::pi * parameters_.f * parameters_.dt * step);
+
+    std::vector<em::StructPoissonSolver2D::Region> regions;
+    
+    regions.push_back(em::StructPoissonSolver2D::Region{
+        em::CellType::BoundaryNeumann,
+        {0, 0},
+        {static_cast<int>(parameters_.nx - 1), 0},
+        []() { return 0.0; }
+    });
+    
+    regions.push_back(em::StructPoissonSolver2D::Region{
+        em::CellType::BoundaryNeumann,
+        {0, static_cast<int>(parameters_.ny - 1)},
+        {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)},
+        []() { return 0.0; }
+    });
+
+    regions.push_back(em::StructPoissonSolver2D::Region{
+        em::CellType::BoundaryDirichlet,
+        {0, 0},
+        {0, static_cast<int>(parameters_.ny - 1)},
+        [=]() { return boundary_voltage; }
+    });
+
+    regions.push_back(em::StructPoissonSolver2D::Region{
+        em::CellType::BoundaryDirichlet,
+        {static_cast<int>(parameters_.nx - 1), 0},
+        {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, 
+        [=]() { return -boundary_voltage; }
+    });
+
+    auto poisson_solver = em::StructPoissonSolver2D(domain_prop, regions);
+
+        spark::interpolate::weight_to_grid(electrons_, electron_density_);
+        spark::interpolate::weight_to_grid(ions_, ion_density_);
         
-        auto electron_collisions = load_electron_collisions();
-        auto ion_collisions = load_ion_collisions();
+        spark::em::charge_density<2>(parameters_.particle_weight, ion_density_,
+                                  electron_density_, rho_field_);
 
-        em::StructPoissonSolver2D::DomainProp domain_prop;
-        domain_prop.extents = {static_cast<int>(parameters_.nx), static_cast<int>(parameters_.ny)};
-        domain_prop.dx = {parameters_.dx, parameters_.dy};
+        poisson_solver.solve(phi_field_.data(), rho_field_.data());
 
-        std::vector<em::StructPoissonSolver2D::Region> region;
+        spark::em::electric_field<2>(phi_field_, electric_field_.data());
 
-        region.push_back({em::CellType::BoundaryNeumann,
-                          {0, 0},
-                          {static_cast<int>(parameters_.nx - 1), 0},
-                          []()
-                          { return 0.0; }});
+        spark::interpolate::field_at_particles(electric_field_, electrons_, electron_field);
+        spark::interpolate::field_at_particles(electric_field_, ions_, ion_field);
 
-        region.push_back({em::CellType::BoundaryNeumann,
-                          {0, static_cast<int>(parameters_.ny - 1)},
-                          {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)},
-                          []()
-                          { return 0.0; }});
+        spark::particle::move_particles(electrons_, electron_field, parameters_.dt);
+        spark::particle::move_particles(ions_, ion_field, parameters_.dt);
 
-        region.push_back({em::CellType::BoundaryDirichlet,
-                          {0, 0},
-                          {0, static_cast<int>(parameters_.ny - 1)},
-                          []()
-                          { return 0.0; }});
+        tiled_boundary_.apply(&electrons_);
+        tiled_boundary_.apply(&ions_);
 
-        region.push_back({em::CellType::BoundaryDirichlet,
-                          {static_cast<int>(parameters_.nx - 1), 0},
-                          {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)},
-                          []()
-                          { return 0.0; }});
+        electron_collisions.react_all();
+        ion_collisions.react_all();
 
-
-        auto poisson_solver = em::StructPoissonSolver2D(domain_prop, region);
-        events().notify(Event::Start, state_);
-
-        for (step = 0; step < parameters_.n_steps; ++step) {
-            spark::interpolate::weight_to_grid(electrons_, electron_density_);
-            spark::interpolate::weight_to_grid(ions_, ion_density_);
-            
-            spark::em::charge_density<2>(parameters_.particle_weight, ion_density_,
-                                      electron_density_, rho_field_);
-
-
-            poisson_solver.solve(phi_field_.data(), rho_field_.data());
-
-            spark::em::electric_field<2>(phi_field_, electric_field_.data());
-
-            spark::interpolate::field_at_particles(electric_field_, electrons_, electron_field);
-            spark::interpolate::field_at_particles(electric_field_, ions_, ion_field);
-
-            spark::particle::move_particles(electrons_, electron_field, parameters_.dt);
-            spark::particle::move_particles(ions_, ion_field, parameters_.dt);
-
-            tiled_boundary_.apply(&electrons_);
-            tiled_boundary_.apply(&ions_);
-
-            electron_collisions.react_all();
-            ion_collisions.react_all();
-
-            events().notify(Event::Step, state_);
-    } 
-            events().notify(Event::End, state_);
+        events().notify(Event::Step, state_);
+    }
+    events().notify(Event::End, state_);
 }
 
 Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
     return events_;
 }
 
-    void Simulation::set_initial_conditions() {
-        electrons_ = spark::particle::ChargedSpecies<2, 3>(-spark::constants::e, spark::constants::m_e);
+void Simulation::set_initial_conditions() {
+    electrons_ = spark::particle::ChargedSpecies<2, 3>(-spark::constants::e, spark::constants::m_e);
         electrons_.add(parameters_.n_initial,
                        maxwellian_emitter(parameters_.te, parameters_.lx, parameters_.ly,
                                           spark::constants::m_e));
@@ -116,27 +123,30 @@ Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
         ions_.add(parameters_.n_initial,
                   maxwellian_emitter(parameters_.ti, parameters_.lx, parameters_.ly, parameters_.m_he));
 
-        electron_density_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
-                                                           {parameters_.nx, parameters_.ny});
-        ion_density_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
+    electron_density_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
                                                       {parameters_.nx, parameters_.ny});
-        rho_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
-                                                    {parameters_.nx, parameters_.ny});
-        phi_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
-                                                    {parameters_.nx, parameters_.ny});        
+    ion_density_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
+                                                 {parameters_.nx, parameters_.ny});
+    rho_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
+                                               {parameters_.nx, parameters_.ny});
+    phi_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
+                                               {parameters_.nx, parameters_.ny});
 
-        electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
-        ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
-        electric_field_ = spark::spatial::TUniformGrid<core::TVec<double, 2>, 2>({parameters_.lx, parameters_.ly},{parameters_.nx, parameters_.ny});
-        
-        std::vector<spark::particle::TiledBoundary> boundaries = {
+    electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(
+        spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
+    ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(
+        spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
+    electric_field_ = spark::spatial::TUniformGrid<core::TVec<double, 2>, 2>(
+        {parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny});
+
+    std::vector<spark::particle::TiledBoundary> boundaries = {
         {{0, 0}, {static_cast<int>(parameters_.nx - 1), 0}, spark::particle::BoundaryType::Specular},
         {{0, static_cast<int>(parameters_.ny - 1)}, {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Specular},
         {{0, 0}, {0, static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Absorbing},
         {{static_cast<int>(parameters_.nx - 1), 0}, {static_cast<int>(parameters_.nx - 1), static_cast<int>(parameters_.ny - 1)}, spark::particle::BoundaryType::Absorbing}
     };
-        tiled_boundary_ = spark::particle::TiledBoundary2D(electric_field_.prop(), boundaries, parameters_.dt);
-    }
+    tiled_boundary_ = spark::particle::TiledBoundary2D(electric_field_.prop(), boundaries, parameters_.dt);
+}
 
     spark::collisions::MCCReactionSet<2, 3> Simulation::load_electron_collisions() {
         auto electron_reactions = reactions::load_electron_reactions(data_path_, parameters_, ions_);
