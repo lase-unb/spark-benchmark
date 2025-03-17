@@ -70,7 +70,8 @@ namespace spark {
         //spark::spatial::UniformGrid<2> phi_field_;
 
         Events<Event, EventAction> events_;
-            
+
+        void reduce_rho();    
         std::vector<spark::em::StructPoissonSolver2D::Region> region() const;
         spark::spatial::TUniformGrid<spark::core::Vec<2>, 2> convert_electric_field() const;
         //spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;

@@ -85,8 +85,7 @@ void Simulation::run() {
         spark::interpolate::weight_to_grid(electrons_, electron_density_);
         spark::interpolate::weight_to_grid(ions_, ion_density_);
         
-        spark::em::charge_density<2>(parameters_.particle_weight, ion_density_,
-                                  electron_density_, rho_field_);
+        reduce_rho();
 
         poisson_solver.solve(phi_field_.data(), rho_field_.data());
 
@@ -107,6 +106,18 @@ void Simulation::run() {
         events().notify(Event::Step, state_);
     }
     events().notify(Event::End, state_);
+}
+
+void Simulation::reduce_rho() {
+    const auto k = constants::e * parameters_.particle_weight / (parameters_.dx * parameters_.dx);
+
+    auto* rho_ptr = rho_field_.data_ptr();
+    auto* ne = electron_density_.data_ptr();
+    auto* ni = electron_density_.data_ptr();
+
+    for (size_t i = 0; i < rho_field_.n_total(); ++i) {
+        rho_ptr[i] = k * (ni[i] - ne[i]);
+    }
 }
 
 Events<Simulation::Event, Simulation::EventAction>& Simulation::events() {
