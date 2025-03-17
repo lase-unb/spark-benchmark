@@ -90,7 +90,7 @@ void Simulation::run() {
 
         poisson_solver.solve(phi_field_.data(), rho_field_.data());
 
-        spark::em::electric_field<2>(phi_field_, electric_field_.data());
+        spark::em::electric_field(phi_field_, electric_field_.data());
 
         spark::interpolate::field_at_particles(electric_field_, electrons_, electron_field);
         spark::interpolate::field_at_particles(electric_field_, ions_, ion_field);
@@ -114,7 +114,7 @@ void Simulation::reduce_rho() {
 
     auto* rho_ptr = rho_field_.data_ptr();
     auto* ne = electron_density_.data_ptr();
-    auto* ni = electron_density_.data_ptr();
+    auto* ni = ion_density_.data_ptr();
 
     for (size_t i = 0; i < rho_field_.n_total(); ++i) {
         rho_ptr[i] = k * (ni[i] - ne[i]);
@@ -144,10 +144,6 @@ void Simulation::set_initial_conditions() {
     phi_field_ = spark::spatial::UniformGrid<2>({parameters_.lx, parameters_.ly},
                                                {parameters_.nx, parameters_.ny});
 
-    electron_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(
-        spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
-    ion_field = spark::core::TMatrix<spark::core::TVec<double, 2>, 1>(
-        spark::core::ULongVec<1>{parameters_.nx * parameters_.ny});
     electric_field_ = spark::spatial::TUniformGrid<core::TVec<double, 2>, 2>(
         {parameters_.lx, parameters_.ly}, {parameters_.nx, parameters_.ny});
 

@@ -13,6 +13,7 @@
 
 #include "events.h"
 #include "parameters.h"
+#include "spark/core/vec.h"
 
 namespace spark {
 
@@ -75,8 +76,8 @@ namespace spark {
         std::vector<spark::em::StructPoissonSolver2D::Region> region() const;
         spark::spatial::TUniformGrid<spark::core::Vec<2>, 2> convert_electric_field() const;
         //spark::spatial::TUniformGrid<spark::core::TVec<double, 2>, 2> electric_field_;
-        spark::core::TMatrix<spark::core::TVec<double, 2>, 1> electron_field;
-        spark::core::TMatrix<spark::core::TVec<double, 2>, 1> ion_field;
+        spark::core::TMatrix<core::Vec<2>, 1> electron_field;
+        spark::core::TMatrix<core::Vec<2>, 1> ion_field;
         spark::particle::TiledBoundary2D tiled_boundary_;
 
         void set_initial_conditions();
