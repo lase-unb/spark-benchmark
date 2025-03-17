@@ -74,7 +74,7 @@ void setup_events(Simulation& simulation) {
                 t_last = now;
                 initial_step = step;
                 const float progress = static_cast<float>(step) /
-                    static_cast<float>(std::max(1ull, s.parameters().n_steps - 1));
+                    static_cast<float>(std::max(1, (int) s.parameters().n_steps - 1));
                 const double dur_per_particle = dur / (static_cast<double>(s.electrons().n() + s.ions().n()));
                 printf("Info (Step: %zu/%zu, %.2f%%):\n", step, s.parameters().n_steps, progress * 100.0);
                 printf("    Avg step duration: %.2fms (%.2eus/p)\n", dur, dur_per_particle * 1e3);
